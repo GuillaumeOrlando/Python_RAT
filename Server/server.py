@@ -7,6 +7,7 @@ import threading
 import MySQLdb
 from functions import check_alive
 from threading import Thread
+import subprocess
 
 class ClientThread(threading.Thread):
 
@@ -21,7 +22,7 @@ class ClientThread(threading.Thread):
         # Se lance à chaques nouveaux threads
         array_infos = []
         try:
-            receive = self.clientsocket.recv(2048)
+            receive = self.clientsocket.recv(32768)
             alive = True
         except:
             alive = False
@@ -98,6 +99,12 @@ class ClientThread(threading.Thread):
 		db.close()
 		#Upgrade BDD avec dernière conenxion
 
+	    elif "CMD:" in str(receive):
+		cmd_receive = str(receive)
+		print("[+] Remote command result : " + cmd_receive)
+
+	    elif str(receive) == "Exit":
+		pass
             else:
                 print("[-] Incorrect message format : " + str(receive))
 

