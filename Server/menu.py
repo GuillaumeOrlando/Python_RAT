@@ -1,5 +1,7 @@
 import functions
 import MySQLdb
+import os
+from functions import *
 
 def menu():
 	print("[1] List connected clients")
@@ -19,7 +21,6 @@ def id_to_ip(client_id):
 	return ip
 
 def interact_sub_menu():
-	print(" ")
 	client_id = raw_input("ID of the remote client to interact with : ")
 	ip = id_to_ip(client_id)
 
@@ -34,6 +35,7 @@ def interact_sub_menu():
 			print("Debug me")
 
 		if command_sub == "Exit":
+			print(" ")
 			Exit = True
 		else:
 			pass
@@ -45,10 +47,14 @@ while loop:
 	choice = input("Choose option (1 to 4) : ")
 
 	if choice == 1:
+		os.system('clear')
 		functions.who_is_alive_connected()
 	elif choice == 2:
+		os.system('clear')
                 functions.who_is_alive()
 	elif choice == 3:
+		os.system('clear')
+		who_is_alive()
                 interact_sub_menu()
 	elif choice == 4:
                 loop = False
