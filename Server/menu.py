@@ -24,6 +24,8 @@ def interact_sub_menu():
 	client_id = raw_input("ID of the remote client to interact with : ")
 	ip = id_to_ip(client_id)
 
+	calc_aes_key(client_id)
+
 	Exit = False
 	print("Type 'Exit' to quit the remote shell.")
 	while Exit == False:

