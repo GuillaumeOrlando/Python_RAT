@@ -7,3 +7,11 @@ First, because it's illegal, and second because of the unstable nature of this c
 It was only tested in a restricted environnement, and the result may be unpredictable in a real life scenario.
 
 ### Work in progress
+
+### Setup
+
+### Keep-Alive
+
+### Encryption
+
+### Remote Commands Executions
