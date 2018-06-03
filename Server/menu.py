@@ -8,8 +8,11 @@ def menu():
 	print("[1] List connected clients")
 	print("[2] List all clients")
 	print("[3] Interact with a client")
-	print("[4] Kill the C2 server")
-	print("[5] Exit")
+	print("[4] Start the C2 server")
+	print("[5] Kill the C2 server")
+	print("[6] Build a generic Windows client")
+	print("[7] Build a custom client")
+	print("[8] Exit")
 
 def id_to_ip(client_id):
 # Translate an unique ID into the corresponding IP
@@ -48,7 +51,7 @@ loop =True
 
 while loop:
 	menu()
-	choice = input("Choose option (1 to 4) : ")
+	choice = input("Choose option (1 to 8) : ")
 
 	if choice == 1:
 		os.system('clear')
@@ -62,8 +65,14 @@ while loop:
                 interact_sub_menu()
 	elif choice == 4:
 		os.system('clear')
-		kill_server()
+		start_server()
 	elif choice == 5:
+		os.system('clear')
+		kill_server()
+	elif choice == 6:
+		os.system('clear')
+		generate_client()
+	elif choice == 8:
                 loop = False
 	else:
 		print("Wrong option selection.")

