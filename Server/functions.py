@@ -44,8 +44,11 @@ def decrypt(msg,key):
 	msg = base64.b64decode(msg)
 	iv = msg[:AES.block_size]
 	cipher = AES.new(key, AES.MODE_OFB, iv)
-	msg = unpad(cipher.decrypt(msg[AES.block_size:]))
-	return msg
+	try:
+		msg = unpad(cipher.decrypt(msg[AES.block_size:]))
+		return msg
+	except:
+		print("[-] Corrupted message")
 
 def check_aes_key():
 	# Check if a client don't have is decryption key in the database. If not, generate it.
