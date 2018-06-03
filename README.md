@@ -8,10 +8,10 @@ It was only tested in a restricted environnement, and the result may be unpredic
 
 ### Work in progress
 
-### Setup
-
-### Keep-Alive
-
-### Encryption
-
-### Remote Commands Executions
+Setup (init script + db script)
+Keep-Alive
+Encryption
+Remote Commands Executions
+Kill clients
+Manual UAC prompt for privilege escalation
+Gather deep infos about the client
