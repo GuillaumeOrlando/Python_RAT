@@ -26,15 +26,15 @@ I decline all responsibilities in case of misuse. /!\
 - Custom clients builder (Static encryption key can be set and variable name can be randomly changed in order to generate a new signature of the clients binary).
 - Anti-C2 hijacking technique that prevents the RAT client to be taken-over by a malicious adversary.
 - Upload / download orders can be sent to the client. It means that the clients binary can be updated on the fly.
-- Spreading capability inside a local area network. ( ###* )
+- Spreading capability inside a local area network. ( * )
 
-Forthcoming:
+## Forthcoming:
 - Unix client integration.
 - Static AV evasion (Sandbox/VM/debugger detection & evasion).
-- Dynamic AV evasion (Probably process doppelgänging technique + a custom packer for it, ( ###* ) but i don't know if i am really going to release it. It exposes me to a lot of trouble, and i'm already in a grey area concerning this project =D).
+- Dynamic AV evasion (Probably process doppelgänging technique + a custom packer for it, ( * ) but i don't know if i am really going to release it. It exposes me to a lot of trouble, and i'm already in a grey area concerning this project =D).
 - More information gathering from the clients.
-- More post-exploitations modules (Keylogger, screen / sound / webcam detector ( ###* )).
-- Cabability of turning off the AV ( ###* ).
+- More post-exploitations modules (Keylogger, screen / sound / webcam detector ( * )).
+- Cabability of turning off the AV ( * ).
 - Alternative communication channel (DNS tunneling and Sneaky Creeper integration).
 
 WARNING:
