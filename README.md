@@ -28,7 +28,7 @@ I decline all responsibilities in case of misuse. /!\
 - Upload / download orders can be sent to the client. It means that the clients binary can be updated on the fly.
 - Spreading capability inside a local area network. ( * )
 
-## Forthcoming:
+## Forthcoming
 - Unix client integration.
 - Static AV evasion (Sandbox/VM/debugger detection & evasion).
 - Dynamic AV evasion (Probably process doppelgänging technique + a custom packer for it, ( * ) but i don't know if i am really going to release it. It exposes me to a lot of trouble, and i'm already in a grey area concerning this project =D).
@@ -37,5 +37,5 @@ I decline all responsibilities in case of misuse. /!\
 - Cabability of turning off the AV ( * ).
 - Alternative communication channel (DNS tunneling and Sneaky Creeper integration).
 
-WARNING:
+## WARNING
 I don't want to be boring, but again, using it in the wild is a mistake. On a technical level, it's not that hard to reverse the encryption key generation on the client side. The server's input from the clients are not yet sanatizes, and i'm sure that with a bit of fuzzing, it's possible to crash the server from the client, or worst, perform SQL injections and directly query the C2 database from a client. I have learned a lot of things since the beginning of this project, so it's probably poorly written and not that secure, by the server and the client point of view. Since the source code of the RAT is fully public, using it is not viable, and plenty of kill switch can be found. Also, the binary are hardcoded with the C2 address, and i'm not going to change this =D. I hope that i manage to prevent you from using it for bad purpose.
